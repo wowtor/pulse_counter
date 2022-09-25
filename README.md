@@ -8,8 +8,14 @@ This script read readings from a S0 pulse counter [https://www.sossolutions.nl/5
 sudo apt install python3 python3-serial
 ```
 
-## Run
+## Usage
+
+Run the script.
 
 ```sh
 ./run_counter.py
 ```
+
+Use a browser and point it to [http://localhost:8000] to access the readings.
+Individual counters can be accessed at [http://localhost:8000/0],
+[http://localhost:8000/1], etc.
