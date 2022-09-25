@@ -54,8 +54,11 @@ class CounterStates:
 
     def save_states(self):
         with self._lock:
-            with open(self.path, 'wt') as f:
-                f.write(','.join([str(v) for v in self.states]))
+            try:
+                with open(self.path, 'wt') as f:
+                    f.write(','.join([str(v) for v in self.states]))
+            except Exception as e:
+                LOG.warning(f'failed to save counter states: {e}')
 
     def increment(self, pulses):
         with self._lock:
@@ -132,7 +135,7 @@ def read_serial(dev: serial.Serial, states: CounterStates):
 def run_serial(device: str, states: CounterStates):
     while True:
         if not os.path.exists(device):
-            LOG.warning(f'not found: {device}')
+            LOG.warning(f'not found: {device} (will keep trying)')
             while not os.path.exists(device):
                 time.sleep(1)
 
@@ -142,10 +145,11 @@ def run_serial(device: str, states: CounterStates):
         except KeyboardInterrupt:
             break
         except serial.serialutil.SerialException as e:
-            LOG.warning(f'serial error: {e}; reconnecting...')
+            LOG.warning(f'serial error: {e} (will try again in 10 seconds)')
             time.sleep(10)
         except Exception as e:
-            LOG.warning(f's0 counter error {e}; reconnecting...', e)
+            LOG.warning(f's0 counter error {e} (will try again in 10 seconds)', e)
+            time.sleep(10)
 
 
 if __name__ == '__main__':
