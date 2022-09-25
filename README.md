@@ -1,9 +1,15 @@
 # S0 Pulse Counter
 
 This script read readings from a [S0 pulse counter](https://www.sossolutions.nl/5-kanaals-s0-pulse-meter-op-usb)
-and exposes them via a rest API.
+and exposes them to the network via a rest API.
+
+The API is not secured, but plain HTTP without authentication. If you want
+to keep the readings private, you may want to add a security layer such as a
+firewall or reverse proxy.
 
 ## Pre-requisites
+
+Python 3 with pyserial is required to run this service.
 
 ```sh
 sudo apt install python3 python3-serial
@@ -12,9 +18,10 @@ sudo apt install python3 python3-serial
 ## Usage
 
 Identify the pulse counter device. It is typically named `/dev/ttyACM0` but
-may be named differently.
+may be named differently. Use `dmesg` to find it.
 
-Launch the service, with `DEVICE` replaced by the name of the pulse counter.
+Launch the service, with `DEVICE` replaced by the name of the pulse counter
+device.
 
 ```sh
 ./run_counter.py --device DEVICE
