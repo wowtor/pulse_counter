@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 
+import argparse
 import collections
 from functools import partial
 import http.server
@@ -13,8 +14,10 @@ import time
 import serial
 
 
-SERIAL_DEVICE = '/dev/ttyACM0'
-PORT = 8000
+DEFAULT_SERIAL_DEVICE = '/dev/ttyACM0'
+DEFAULT_STATE_FILE = 'pulse_counter.state'
+DEFAULT_LOG_FILE = 'pulse_counter.log'
+DEFAULT_PORT = 8000
 
 
 LOG = logging.getLogger(__name__)
@@ -146,15 +149,36 @@ def run_serial(device: str, states: CounterStates):
 
 
 if __name__ == '__main__':
-    logging.basicConfig(level=logging.INFO)
+    default_state_file = os.path.join(os.path.dirname(__file__), DEFAULT_STATE_FILE)
+    default_log_file = os.path.join(os.path.dirname(__file__), DEFAULT_LOG_FILE)
 
-    states_file = os.path.join(os.path.dirname(__file__), 'pulse_counter.state')
-    states = CounterStates(states_file)
+    parser = argparse.ArgumentParser(description='Pulse counter service.')
+    parser.add_argument('--device', metavar='DEVICE', default=DEFAULT_SERIAL_DEVICE, help=f'pulse counter serial device (default: {DEFAULT_SERIAL_DEVICE})')
+    parser.add_argument('--state', metavar='PATH', default=default_state_file, help=f'path to persistent state file (default: {default_state_file})')
+    parser.add_argument('--port', metavar='PORT', default=DEFAULT_PORT, type=int, help=f'port for rest API to listen on (default: {DEFAULT_PORT})')
+    parser.add_argument('--logfile', metavar='PATH', default=default_log_file, help=f'log file (default: {default_log_file})')
+    args = parser.parse_args()
 
-    t1 = threading.Thread(target=run_serial, args=(SERIAL_DEVICE, states))
+    logging.getLogger().setLevel(logging.DEBUG)
+    log_formatter = logging.Formatter("%(asctime)s [%(levelname)-4.4s]  %(message)s")
+
+    file_handler = logging.FileHandler(args.logfile)
+    file_handler.setFormatter(log_formatter)
+    file_handler.setLevel(logging.WARN)
+    logging.getLogger().addHandler(file_handler)
+
+    console_handler = logging.StreamHandler()
+    console_handler.setFormatter(log_formatter)
+    file_handler.setLevel(logging.INFO)
+    logging.getLogger().addHandler(console_handler)
+
+    LOG.info('launching pulse counter service')
+    states = CounterStates(args.state)
+
+    t1 = threading.Thread(target=run_serial, args=(args.device, states))
     t1.start()
 
     handler = partial(Handler, states)
-    with socketserver.TCPServer(("", PORT), handler) as httpd:
-        LOG.info(f'serving at port {PORT}')
+    with socketserver.TCPServer(("", args.port), handler) as httpd:
+        LOG.info(f'serving at port {args.port}')
         httpd.serve_forever()

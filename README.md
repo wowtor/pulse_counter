@@ -11,10 +11,13 @@ sudo apt install python3 python3-serial
 
 ## Usage
 
-Launch the service.
+Identify the pulse counter device. It is typically named `/dev/ttyACM0` but
+may be named differently.
+
+Launch the service, with `DEVICE` replaced by the name of the pulse counter.
 
 ```sh
-./run_counter.py
+./run_counter.py --device DEVICE
 ```
 
 Use a browser and point it to <http://localhost:8000> to access the readings.
