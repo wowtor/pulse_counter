@@ -6,6 +6,7 @@ from functools import partial
 import http.server
 import json
 import logging
+import logging.handlers
 import os
 import socketserver
 import threading
@@ -166,7 +167,7 @@ if __name__ == '__main__':
     logging.getLogger().setLevel(logging.DEBUG)
     log_formatter = logging.Formatter("%(asctime)s [%(levelname)-4.4s]  %(message)s")
 
-    file_handler = logging.FileHandler(args.logfile)
+    file_handler = logging.handlers.RotatingFileHandler(args.logfile, maxBytes=1024*1024, backupCount=3)
     file_handler.setFormatter(log_formatter)
     file_handler.setLevel(logging.WARN)
     logging.getLogger().addHandler(file_handler)
